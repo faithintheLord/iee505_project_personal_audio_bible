@@ -1,0 +1,87 @@
+body {
+  font-family: Arial, sans-serif;
+  background: white;
+  color: black;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+section {
+  border: 1px solid #111;
+  padding: 15px;
+  background: #f8f8f8;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+input, select, textarea, button {
+  width: 100%;
+  padding: 6px;
+  margin-top: 4px;
+  border: 1px solid #222;
+  background: #fff;
+}
+
+button {
+  cursor: pointer;
+  background: #111;
+  color: #fff;
+}
+
+button:disabled {
+  background: #999;
+}
+
+.bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 2px solid #000;
+  background: #fff;
+}
+
+.flex {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+textarea {
+  min-height: 80px;
+}
+
+.message {
+  margin-top: 8px;
+  color: #111;
+  font-size: 0.9em;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #000;
+  padding: 6px;
+  text-align: left;
+}
+
+audio {
+  width: 100%;
+  margin-top: 10px;
+}
