@@ -14,6 +14,7 @@ from . import crud, models, schemas
 from .db import get_session, init_db
 from .models import utc_now_iso
 from .seed import seed
+from . import scripture
 
 app = FastAPI(title="Personal Audio Bible")
 app.add_middleware(
@@ -64,7 +65,8 @@ def register(payload: schemas.UserCreate, session: Session = Depends(get_session
     session.commit()
 
     token = auth_utils.create_access_token({"sub": str(user.user_id)})
-    return schemas.Token(access_token=token, user=user)  # type: ignore[arg-type]
+    user_read = schemas.UserRead.model_validate(user)
+    return schemas.Token(access_token=token, user=user_read)
 
 
 @app.post("/api/login", response_model=schemas.Token)
@@ -78,7 +80,8 @@ def login(payload: schemas.UserLogin, session: Session = Depends(get_session)):
     if not user or not auth_utils.verify_password(payload.password, user.password):
         raise HTTPException(status_code=400, detail="Incorrect credentials")
     token = auth_utils.create_access_token({"sub": str(user.user_id)}, timedelta(minutes=1440))
-    return schemas.Token(access_token=token, user=user)  # type: ignore[arg-type]
+    user_read = schemas.UserRead.model_validate(user)
+    return schemas.Token(access_token=token, user=user_read)
 
 
 @app.get("/api/me", response_model=schemas.UserRead)
@@ -108,12 +111,17 @@ def get_books(
     current_user: models.Users = Depends(auth_utils.get_current_user),
 ):
     crud.ensure_listen(session, current_user, bible_id)
-    return session.exec(
+    results = session.exec(
         select(models.Books, models.CanonBooks)
         .where(models.Books.bible_id == bible_id)
         .join(models.CanonBooks, models.CanonBooks.canon_book_name == models.Books.canon_book_name)
         .order_by(models.CanonBooks.canonical_order)
     ).all()
+    # Return JSON-friendly objects in the same shape the frontend expects
+    return [
+        {"Books": book.model_dump(), "CanonBooks": canon.model_dump()}
+        for book, canon in results
+    ]
 
 
 @app.get("/api/books/{book_id}/chapters")
@@ -126,7 +134,7 @@ def get_chapters(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     crud.ensure_listen(session, current_user, book.bible_id)
-    return session.exec(
+    results = session.exec(
         select(models.Chapters, models.CanonChapters)
         .where(models.Chapters.book_id == book_id)
         .join(
@@ -136,6 +144,38 @@ def get_chapters(
         )
         .order_by(models.CanonChapters.canon_book_chapter)
     ).all()
+    return [
+        {"Chapters": chapter.model_dump(), "CanonChapters": canon.model_dump()}
+        for chapter, canon in results
+    ]
+
+
+@app.get("/api/versions")
+def get_versions(
+    current_user: models.Users = Depends(auth_utils.get_current_user),
+):
+    versions = scripture.get_versions()
+    return versions or ["KJV"]
+
+
+@app.get("/api/verses")
+def get_verses(
+    book: str,
+    chapter: int,
+    start: int,
+    end: int,
+    version: str = "KJV",
+    current_user: models.Users = Depends(auth_utils.get_current_user),
+):
+    if start < 1 or end < start:
+        raise HTTPException(status_code=400, detail="Invalid verse range")
+    chapter_max = scripture.get_chapter_count(book, chapter)
+    if chapter_max and end > chapter_max:
+        raise HTTPException(status_code=400, detail="Verse end exceeds chapter")
+    text = scripture.get_passage_text(book, chapter, start, end, version)
+    if not text:
+        raise HTTPException(status_code=404, detail="Passage not found")
+    return {"text": text}
 
 
 # Recordings CRUD
@@ -162,7 +202,7 @@ def list_recordings(
         ).first()
         wpm = None
         if rec.duration_seconds and rec.duration_seconds > 0 and rec.transcription_text:
-            wpm = crud.word_count(rec.transcription_text) / rec.duration_seconds
+            wpm = (crud.word_count(rec.transcription_text) / rec.duration_seconds) * 60
         output.append(
             schemas.RecordingRead(
                 recording_id=rec.recording_id,

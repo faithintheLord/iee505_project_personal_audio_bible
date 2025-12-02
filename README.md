@@ -23,6 +23,7 @@ The database file `app.db` lives in the project root. Tables are created automat
 - `app/static/` – Two static pages (`login.html`, `app.html`) with plain JS and CSS.
 - `requirements.txt` – Python dependencies.
 - `schema.sql` – Optional schema outline for reference.
+- `scripture.csv` – Canon data (books/chapters/verses/text) used to seed the Bible and provide verse lookups.
 
 ## API outline
 - `POST /api/register` – create user + auth grants for Bible 1 and return token.
@@ -31,6 +32,8 @@ The database file `app.db` lives in the project root. Tables are created automat
 - `GET /api/bibles` – list bibles the user can access.
 - `GET /api/bibles/{id}/books` – books for a bible (requires listen/manage).
 - `GET /api/books/{id}/chapters` – chapters for a book.
+- `GET /api/versions` – list available scripture versions from `scripture.csv`.
+- `GET /api/verses` – fetch verse text for a book/chapter/range/version (used to auto-fill transcription).
 - `GET /api/bibles/{id}/recordings` – list recordings with WPM.
 - `POST /api/recordings` – upload audio (multipart/form-data) + metadata.
 - `GET /api/recordings/{id}/audio` – stream audio (increments play count).

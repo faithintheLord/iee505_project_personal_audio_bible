@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlmodel import Field, SQLModel
-from sqlalchemy import PrimaryKeyConstraint, ForeignKeyConstraint
+from sqlalchemy import PrimaryKeyConstraint, ForeignKeyConstraint, LargeBinary
 
 
 class Users(SQLModel, table=True):
@@ -80,7 +80,7 @@ class Recordings(SQLModel, table=True):
     verse_index_start: int
     verse_index_end: int
     accessed_count: int = Field(default=0)
-    file: bytes = Field(sa_column_kwargs={"type_": "BLOB"})
+    file: bytes = Field(sa_type=LargeBinary)
     file_mime: Optional[str] = None
     duration_seconds: Optional[float] = None
     transcription_text: Optional[str] = None

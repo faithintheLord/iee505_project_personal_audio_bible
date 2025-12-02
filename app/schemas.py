@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator, ConfigDict
 
 
 class UserCreate(BaseModel):
@@ -21,6 +21,7 @@ class UserRead(BaseModel):
     username: str
     name: str
     email: EmailStr
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):
@@ -37,18 +38,18 @@ class RecordingCreate(BaseModel):
     duration_seconds: Optional[float] = None
     transcription_text: Optional[str] = None
 
-    @validator("verse_index_start")
-    def start_positive(cls, v):
+    @field_validator("verse_index_start")
+    @classmethod
+    def start_positive(cls, v: int) -> int:
         if v < 1:
             raise ValueError("VerseIndexStart must be >= 1")
         return v
 
-    @validator("verse_index_end")
-    def end_positive(cls, v, values):
-        start = values.get("verse_index_start")
-        if start is not None and v < start:
+    @model_validator(mode="after")
+    def validate_range(self):
+        if self.verse_index_end < self.verse_index_start:
             raise ValueError("VerseIndexEnd must be >= start")
-        return v
+        return self
 
 
 class RecordingUpdate(BaseModel):
@@ -56,18 +57,22 @@ class RecordingUpdate(BaseModel):
     verse_index_end: Optional[int] = None
     transcription_text: Optional[str] = None
 
-    @validator("verse_index_start")
-    def start_positive(cls, v):
+    @field_validator("verse_index_start")
+    @classmethod
+    def start_positive(cls, v: Optional[int]) -> Optional[int]:
         if v is not None and v < 1:
             raise ValueError("VerseIndexStart must be >= 1")
         return v
 
-    @validator("verse_index_end")
-    def end_positive(cls, v, values):
-        start = values.get("verse_index_start")
-        if v is not None and start is not None and v < start:
+    @model_validator(mode="after")
+    def validate_range(self):
+        if (
+            self.verse_index_start is not None
+            and self.verse_index_end is not None
+            and self.verse_index_end < self.verse_index_start
+        ):
             raise ValueError("VerseIndexEnd must be >= start")
-        return v
+        return self
 
 
 class RecordingRead(BaseModel):
