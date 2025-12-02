@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Audio Bible – Data Relational Model</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #475569;
+      --paper: #f8fafc;
+      --card: #e2e8f0;
+      --accent: #0ea5e9;
+      --accent-2: #06b6d4;
+      --border: #cbd5e1;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 20% 20%, #e0f2fe 0, #f8fafc 28%), #f8fafc;
+      padding: 32px;
+    }
+    header { max-width: 1080px; margin: 0 auto 28px auto; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.02em; }
+    p.lede { margin: 0 0 12px; color: var(--muted); line-height: 1.5; }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      background: #0f172a;
+      color: white;
+    }
+    .pill.pk { background: #0ea5e9; }
+    .pill.fk { background: #06b6d4; }
+    .pill.uq { background: #f97316; }
+    .pill.ck { background: #334155; }
+    .pill.note { background: #10b981; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      max-width: 1200px;
+      margin: 0 auto 26px auto;
+    }
+    .entity {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .entity-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .entity h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+    .tag {
+      padding: 6px 10px;
+      background: var(--card);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+    table.fields {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table.fields td {
+      padding: 6px 4px;
+      font-size: 14px;
+      vertical-align: top;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    table.fields tr:last-child td { border-bottom: none; }
+    td.col { width: 48%; font-weight: 600; }
+    td.type { width: 22%; color: var(--muted); }
+    td.meta { width: 30%; text-align: right; }
+    section {
+      max-width: 1080px;
+      margin: 0 auto 30px auto;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px 18px 10px 18px;
+    }
+    section h3 {
+      margin: 0 0 8px 0;
+      font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+    ul.relations {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    ul.relations li { margin-bottom: 8px; }
+    .foot {
+      max-width: 1080px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    @media (max-width: 640px) {
+      body { padding: 18px; }
+      h1 { font-size: 24px; }
+      table.fields td { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Personal Audio Bible – Data Relational Model</h1>
+    <p class="lede">
+      Snapshot of the SQLite schema defined in <code>schema.sql</code> and <code>app/models.py</code>.
+      Tables are shown with primary keys, unique constraints, and foreign key links to clarify the access control,
+      canon structure, and recording flow.
+    </p>
+    <div class="legend">
+      <span class="pill pk">PK</span> primary key
+      <span class="pill fk">FK</span> foreign key
+      <span class="pill uq">UQ</span> unique
+      <span class="pill ck">CK</span> composite key
+      <span class="pill note">+</span> notable behavior
+    </div>
+  </header>
+
+  <div class="grid">
+    <article class="entity">
+      <div class="entity-header">
+        <h2>users</h2>
+        <span class="tag">identity</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">user_id</td><td class="type">integer</td><td class="meta"><span class="pill pk">PK</span></td></tr>
+        <tr><td class="col">username</td><td class="type">text</td><td class="meta"><span class="pill uq">UQ</span></td></tr>
+        <tr><td class="col">name</td><td class="type">text</td><td class="meta"></td></tr>
+        <tr><td class="col">email</td><td class="type">text</td><td class="meta"><span class="pill uq">UQ</span></td></tr>
+        <tr><td class="col">password</td><td class="type">text</td><td class="meta"></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>auths</h2>
+        <span class="tag">access root</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">auth_id</td><td class="type">integer</td><td class="meta"><span class="pill pk">PK</span></td></tr>
+        <tr><td class="col">user_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → users.user_id</span></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>bibles</h2>
+        <span class="tag">resource</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">bible_id</td><td class="type">integer</td><td class="meta"><span class="pill pk">PK</span></td></tr>
+        <tr><td class="col">name</td><td class="type">text</td><td class="meta"></td></tr>
+        <tr><td class="col">language</td><td class="type">text</td><td class="meta"></td></tr>
+        <tr><td class="col">version</td><td class="type">text</td><td class="meta"></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>listenauths</h2>
+        <span class="tag">permissions</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">auth_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → auths.auth_id</span></td></tr>
+        <tr><td class="col">bible_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → bibles.bible_id</span></td></tr>
+        <tr><td class="col">composite</td><td class="type">auth_id, bible_id</td><td class="meta"><span class="pill ck">CK</span></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>manageauths</h2>
+        <span class="tag">permissions</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">auth_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → auths.auth_id</span></td></tr>
+        <tr><td class="col">bible_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → bibles.bible_id</span></td></tr>
+        <tr><td class="col">composite</td><td class="type">auth_id, bible_id</td><td class="meta"><span class="pill ck">CK</span></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>canonbooks</h2>
+        <span class="tag">canon</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">canon_book_name</td><td class="type">text</td><td class="meta"><span class="pill pk">PK</span></td></tr>
+        <tr><td class="col">canonical_order</td><td class="type">integer</td><td class="meta"></td></tr>
+        <tr><td class="col">testament</td><td class="type">text</td><td class="meta"></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>canonchapters</h2>
+        <span class="tag">canon</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">canon_book_name</td><td class="type">text</td><td class="meta"><span class="pill fk">FK → canonbooks.canon_book_name</span></td></tr>
+        <tr><td class="col">canon_book_chapter</td><td class="type">integer</td><td class="meta"></td></tr>
+        <tr><td class="col">verse_count</td><td class="type">integer</td><td class="meta"></td></tr>
+        <tr><td class="col">composite</td><td class="type">canon_book_name, canon_book_chapter</td><td class="meta"><span class="pill ck">CK</span></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>books</h2>
+        <span class="tag">canon mapping</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">book_id</td><td class="type">integer</td><td class="meta"><span class="pill pk">PK</span></td></tr>
+        <tr><td class="col">bible_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → bibles.bible_id</span></td></tr>
+        <tr><td class="col">canon_book_name</td><td class="type">text</td><td class="meta"><span class="pill fk">FK → canonbooks.canon_book_name</span></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>chapters</h2>
+        <span class="tag">canon mapping</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">chapter_id</td><td class="type">integer</td><td class="meta"><span class="pill pk">PK</span></td></tr>
+        <tr><td class="col">book_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → books.book_id</span></td></tr>
+        <tr><td class="col">canon_book_name</td><td class="type">text</td><td class="meta"><span class="pill fk">FK → canonchapters.canon_book_name</span></td></tr>
+        <tr><td class="col">canon_book_chapter</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → canonchapters.canon_book_chapter</span></td></tr>
+      </table>
+    </article>
+
+    <article class="entity">
+      <div class="entity-header">
+        <h2>recordings</h2>
+        <span class="tag">media</span>
+      </div>
+      <table class="fields">
+        <tr><td class="col">recording_id</td><td class="type">integer</td><td class="meta"><span class="pill pk">PK</span></td></tr>
+        <tr><td class="col">user_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → users.user_id</span></td></tr>
+        <tr><td class="col">chapter_id</td><td class="type">integer</td><td class="meta"><span class="pill fk">FK → chapters.chapter_id</span></td></tr>
+        <tr><td class="col">date_recorded</td><td class="type">text</td><td class="meta"></td></tr>
+        <tr><td class="col">date_last_accessed</td><td class="type">text</td><td class="meta"></td></tr>
+        <tr><td class="col">verse_index_start</td><td class="type">integer</td><td class="meta"></td></tr>
+        <tr><td class="col">verse_index_end</td><td class="type">integer</td><td class="meta"></td></tr>
+        <tr><td class="col">accessed_count</td><td class="type">integer</td><td class="meta"><span class="pill note">counts plays</span></td></tr>
+        <tr><td class="col">file</td><td class="type">blob</td><td class="meta"></td></tr>
+        <tr><td class="col">file_mime</td><td class="type">text</td><td class="meta"></td></tr>
+        <tr><td class="col">duration_seconds</td><td class="type">real</td><td class="meta"></td></tr>
+        <tr><td class="col">transcription_text</td><td class="type">text</td><td class="meta"></td></tr>
+        <tr><td class="col">word_count</td><td class="type">integer</td><td class="meta"></td></tr>
+        <tr><td class="col">wpm</td><td class="type">real</td><td class="meta"></td></tr>
+      </table>
+    </article>
+  </div>
+
+  <section>
+    <h3>Relationships & flows</h3>
+    <ul class="relations">
+      <li><strong>auths.user_id → users.user_id</strong>: grants derive from a single user.</li>
+      <li><strong>listenauths.auth_id / manageauths.auth_id → auths.auth_id</strong>: permission rows are scoped to an auth record and a bible.</li>
+      <li><strong>listenauths.bible_id / manageauths.bible_id → bibles.bible_id</strong>: per-bible listen/manage flags; composite primary keys prevent duplicates.</li>
+      <li><strong>books.bible_id → bibles.bible_id</strong> & <strong>books.canon_book_name → canonbooks.canon_book_name</strong>: maps a Bible to its canonical book references.</li>
+      <li><strong>canonchapters.canon_book_name → canonbooks.canon_book_name</strong>:</li>
+      <li><strong>chapters.book_id → books.book_id</strong> with <strong>(canon_book_name, canon_book_chapter) → canonchapters</strong>: anchors each stored chapter to the canonical chapter metadata.</li>
+      <li><strong>recordings.user_id → users.user_id</strong> & <strong>recordings.chapter_id → chapters.chapter_id</strong>: recordings are tied to who uploaded and which chapter they cover; verse indices scope the range.</li>
+      <li><strong>access control</strong>: API checks ManageAuths for write/delete operations and ListenAuths for playback/download.</li>
+    </ul>
+  </section>
+
+  <div class="foot">
+    Rendered for quick review; keep this file alongside the API to explain the schema to contributors and stakeholders.
+  </div>
+</body>
+</html>
