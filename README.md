@@ -35,6 +35,7 @@ The database file `app.db` lives in the project root. Tables are created automat
 - `GET /api/versions` – list available scripture versions from `scripture.csv`.
 - `GET /api/verses` – fetch verse text for a book/chapter/range/version (used to auto-fill transcription).
 - `GET /api/bibles/{id}/recordings` – list recordings with WPM.
+- `GET /api/bibles/{id}/analytics` – aggregated metrics (WPM stats with min/max/mean/median/std + histogram, word counts, durations).
 - `POST /api/recordings` – upload audio (multipart/form-data) + metadata.
 - `GET /api/recordings/{id}/audio` – stream audio (increments play count).
 - `PUT /api/recordings/{id}` – update verse range/transcription.
@@ -54,3 +55,4 @@ The database file `app.db` lives in the project root. Tables are created automat
 - Access control follows the ManageAuths/ListenAuths links. Registration automatically grants both for Bible 1.
 - Validation enforces verse ranges against the canon chapter sample and prevents empty uploads.
 - Styling is intentionally monochrome and framework-free for clarity.
+- Recordings store `word_count` and `wpm` on save; `/api/bibles/{id}/analytics` reads those values to return aggregate stats.

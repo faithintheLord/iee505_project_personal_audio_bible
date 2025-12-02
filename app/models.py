@@ -84,6 +84,8 @@ class Recordings(SQLModel, table=True):
     file_mime: Optional[str] = None
     duration_seconds: Optional[float] = None
     transcription_text: Optional[str] = None
+    word_count: Optional[int] = None
+    wpm: Optional[float] = None
 
 
 # Utility helpers

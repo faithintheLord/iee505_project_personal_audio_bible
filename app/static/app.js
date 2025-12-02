@@ -14,6 +14,10 @@ const bookSelect = document.getElementById('book-select');
 const chapterSelect = document.getElementById('chapter-select');
 const versionSelect = document.getElementById('version-select');
 const recordingsTable = document.querySelector('#recordings-table tbody');
+const analyticsSummary = document.getElementById('analytics-summary');
+const analyticsTable = document.querySelector('#analytics-table tbody');
+const boxCanvas = document.getElementById('wpm-boxplot');
+const histCanvas = document.getElementById('wpm-hist');
 const recordMsg = document.getElementById('record-msg');
 const timerSpan = document.getElementById('timer');
 let mediaRecorder, chunks = [], startTime, timerId, lastDuration = 0;
@@ -79,6 +83,7 @@ async function loadBibles() {
   if (bibleSelect.value) {
     await loadBooks();
     await loadRecordings();
+    await loadAnalytics();
   }
 }
 
@@ -137,6 +142,73 @@ async function loadRecordings() {
   });
 }
 
+function fmtNum(val, digits = 2) {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'number') return val.toFixed(digits);
+  return val;
+}
+
+function renderBoxPlot(stats) {
+  if (!boxCanvas || !stats || !stats.count) {
+    if (boxCanvas) boxCanvas.getContext('2d').clearRect(0, 0, boxCanvas.width, boxCanvas.height);
+    return;
+  }
+  const ctx = boxCanvas.getContext('2d');
+  const { min, q1, median, q3, max } = stats;
+  const w = boxCanvas.width, h = boxCanvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const pad = 20;
+  const scale = (val) => pad + ((val - min) / (max - min || 1)) * (w - pad * 2);
+  const midY = h / 2;
+  ctx.strokeStyle = '#000'; ctx.fillStyle = '#ccc'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(scale(min), midY); ctx.lineTo(scale(max), midY); ctx.stroke();
+  const boxLeft = scale(q1), boxRight = scale(q3), boxTop = midY - 15, boxBot = midY + 15;
+  ctx.fillRect(boxLeft, boxTop, boxRight - boxLeft, boxBot - boxTop);
+  ctx.strokeRect(boxLeft, boxTop, boxRight - boxLeft, boxBot - boxTop);
+  ctx.beginPath(); const medX = scale(median); ctx.moveTo(medX, boxTop); ctx.lineTo(medX, boxBot); ctx.stroke();
+}
+
+function renderHistogram(hist) {
+  if (!histCanvas || !hist || !hist.length) {
+    if (histCanvas) histCanvas.getContext('2d').clearRect(0, 0, histCanvas.width, histCanvas.height);
+    return;
+  }
+  const ctx = histCanvas.getContext('2d');
+  const w = histCanvas.width, h = histCanvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const maxCount = Math.max(...hist.map(b => b.count));
+  const barW = w / hist.length;
+  ctx.fillStyle = '#444';
+  hist.forEach((b, i) => {
+    const barH = maxCount ? (b.count / maxCount) * (h - 20) : 0;
+    ctx.fillRect(i * barW + 2, h - barH, barW - 4, barH);
+  });
+}
+
+async function loadAnalytics() {
+  const bibleId = bibleSelect.value;
+  if (!bibleId) return;
+  const data = await apiGet(`${apiBase}/bibles/${bibleId}/analytics`);
+  if (!data) return;
+  const stats = data.wpm_stats || {};
+  analyticsSummary.textContent = `Count: ${stats.count || 0} | Min: ${fmtNum(stats.min)} | Max: ${fmtNum(stats.max)} | Mean: ${fmtNum(stats.mean)} | Median: ${fmtNum(stats.median)} | Std: ${fmtNum(stats.std)}`;
+  analyticsTable.innerHTML = '';
+  const rows = [
+    ['Min', fmtNum(stats.min)],
+    ['Max', fmtNum(stats.max)],
+    ['Mean', fmtNum(stats.mean)],
+    ['Median', fmtNum(stats.median)],
+    ['Std Dev', fmtNum(stats.std)],
+  ];
+  rows.forEach(([label, val]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${label}</td><td>${val}</td>`;
+    analyticsTable.appendChild(tr);
+  });
+  renderBoxPlot(stats);
+  renderHistogram(stats.histogram || []);
+}
+
 async function fillTranscriptionFromSelection() {
   const bookId = bookSelect.value;
   const chapterId = chapterSelect.value;
@@ -193,7 +265,7 @@ recordingsTable.onclick = async (e) => {
   }
 };
 
-bibleSelect.onchange = async () => { await loadBooks(); await loadRecordings(); await fillTranscriptionFromSelection(); };
+bibleSelect.onchange = async () => { await loadBooks(); await loadRecordings(); await loadAnalytics(); await fillTranscriptionFromSelection(); };
 bookSelect.onchange = async () => { await loadChapters(); await fillTranscriptionFromSelection(); };
 chapterSelect.onchange = async () => { updateVerseLimits(); await fillTranscriptionFromSelection(); };
 document.getElementById('verse-start').oninput = fillTranscriptionFromSelection;
@@ -272,6 +344,7 @@ async function uploadRecording() {
   recordMsg.textContent = 'Upload successful';
   document.getElementById('upload-rec').disabled = true;
   await loadRecordings();
+  await loadAnalytics();
 }
 
 document.getElementById('start-rec').onclick = startRecording;
