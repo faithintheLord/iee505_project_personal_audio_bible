@@ -70,5 +70,5 @@ How this meets the “Advanced Analysis Feature” requirement:
 
 The UI is a simple two-page, framework-free frontend:
 
-static/login.html + login.js: registration and login forms that POST to /api/register and /api/login, storing the JWT in localStorage and redirecting to the app page.
-static/app.html + app.js: the main experience. It loads bibles/books/chapters, lets you select a verse range and version, auto-fills the transcription text, records audio via MediaRecorder, uploads it with metadata, lists recordings (play/delete), downloads all recordings as a zip, and shows an Analytics section with WPM stats and charts. The page uses plain HTML/CSS and vanilla JS fetch calls to the backend APIs.
+- `static/login.html` + `login.js`: registration and login forms that POST to `/api/register` and `/api/login`, storing the JWT in `localStorage` and redirecting to the app page.
+- `static/app.html` + `app.js`: loads bibles/books/chapters, lets you select a verse range and version, auto-fills the transcription text, records audio via MediaRecorder, uploads with metadata, lists recordings (play/delete), downloads all recordings as a zip, and shows an Analytics section with WPM stats and charts. Uses plain HTML/CSS and vanilla JS fetch calls to the backend APIs.
