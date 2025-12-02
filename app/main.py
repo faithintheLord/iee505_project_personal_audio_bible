@@ -93,11 +93,6 @@ def login(payload: schemas.UserLogin, session: Session = Depends(get_session)):
     return schemas.Token(access_token=token, user=user_read)
 
 
-@app.get("/api/me", response_model=schemas.UserRead)
-def me(current_user: models.Users = Depends(auth_utils.get_current_user)):
-    return current_user
-
-
 # Bible navigation
 @app.get("/api/bibles")
 def get_bibles(
@@ -426,38 +421,6 @@ def delete_recording(
         raise HTTPException(status_code=404, detail="Book missing")
     crud.ensure_manage(session, current_user, book.bible_id)
     session.delete(recording)
-    session.commit()
-    return {"ok": True}
-
-
-@app.put("/api/recordings/{recording_id}")
-def update_recording(
-    recording_id: int,
-    payload: schemas.RecordingUpdate,
-    session: Session = Depends(get_session),
-    current_user: models.Users = Depends(auth_utils.get_current_user),
-):
-    recording = session.get(models.Recordings, recording_id)
-    if not recording:
-        raise HTTPException(status_code=404, detail="Not found")
-    chapter = session.get(models.Chapters, recording.chapter_id)
-    book = session.get(models.Books, chapter.book_id) if chapter else None
-    crud.ensure_manage(session, current_user, book.bible_id)
-
-    if payload.verse_index_start is not None:
-        if payload.verse_index_start < 1:
-            raise HTTPException(status_code=400, detail="Invalid verse start")
-        recording.verse_index_start = payload.verse_index_start
-    if payload.verse_index_end is not None:
-        if payload.verse_index_end < recording.verse_index_start:
-            raise HTTPException(status_code=400, detail="Invalid verse end")
-        recording.verse_index_end = payload.verse_index_end
-    if payload.transcription_text is not None:
-        recording.transcription_text = payload.transcription_text
-        word_count, wpm = _compute_metrics(recording.transcription_text, recording.duration_seconds)
-        recording.word_count = word_count
-        recording.wpm = wpm
-    session.add(recording)
     session.commit()
     return {"ok": True}
 

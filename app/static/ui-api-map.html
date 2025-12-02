@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UI + API Map (Static Sample)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f7f7f7; color: #111; }
+    h1, h2, h3 { margin: 0 0 8px; }
+    .panel { background: #fff; border: 1px solid #ccc; padding: 16px; margin-bottom: 20px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+    .flex { display: flex; gap: 12px; flex-wrap: wrap; }
+    .box { border: 1px solid #aaa; border-radius: 6px; padding: 12px; background: #fafafa; flex: 1 1 280px; position: relative; min-height: 120px; }
+    .callout { position: absolute; top: -10px; right: 8px; background: #111; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+    .section-title { font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    ul { margin: 6px 0 0 16px; padding: 0; }
+    code { background: #eee; padding: 2px 4px; border-radius: 3px; }
+    .note { font-size: 12px; color: #555; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>UI + API Map (Static Sample)</h1>
+  <p class="note">This is a static reference page (not wired to the app) showing how the frontend uses each API route.</p>
+
+  <div class="panel">
+    <h2>Auth Page (login.html)</h2>
+    <div class="flex">
+      <div class="box">
+        <div class="callout">POST /api/register</div>
+        <div class="section-title">Register Form</div>
+        <ul>
+          <li>Username / name / email / password.</li>
+          <li>Stores JWT from response.</li>
+          <li>Redirects to app on success.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">POST /api/login</div>
+        <div class="section-title">Login Form</div>
+        <ul>
+          <li>Username or email + password.</li>
+          <li>Stores JWT in <code>localStorage</code>.</li>
+          <li>Redirects to app on success.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Main App (app.html)</h2>
+    <div class="flex">
+      <div class="box">
+        <div class="callout">GET /api/bibles</div>
+        <div class="section-title">Bible Picker</div>
+        <ul>
+          <li>Lists bibles user can access.</li>
+          <li>Changes downstream book/chapter data.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">GET /api/bibles/{id}/books</div>
+        <div class="section-title">Book Dropdown</div>
+        <ul>
+          <li>Shows books in selected bible.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">GET /api/books/{id}/chapters</div>
+        <div class="section-title">Chapter Dropdown</div>
+        <ul>
+          <li>Shows chapters for chosen book.</li>
+          <li>Sets verse range limits.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">GET /api/versions</div>
+        <div class="section-title">Version Selector</div>
+        <ul>
+          <li>Lists scripture versions from CSV.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">GET /api/verses</div>
+        <div class="section-title">Verse Auto-fill</div>
+        <ul>
+          <li>Fetches verse text for selected range.</li>
+          <li>Pre-fills transcription textbox.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">POST /api/recordings</div>
+        <div class="section-title">Upload Recording</div>
+        <ul>
+          <li>Uploads audio blob + metadata.</li>
+          <li>Stores word_count and wpm.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">GET /api/bibles/{id}/recordings</div>
+        <div class="section-title">Library Table</div>
+        <ul>
+          <li>Lists recordings with WPM, verses, plays.</li>
+          <li>Displays formatted dates/durations.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">GET /api/recordings/{id}/audio</div>
+        <div class="section-title">Play</div>
+        <ul>
+          <li>Streams selected recording.</li>
+          <li>Increments play count.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">DELETE /api/recordings/{id}</div>
+        <div class="section-title">Delete</div>
+        <ul>
+          <li>Removes a recording.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">GET /api/bibles/{id}/analytics</div>
+        <div class="section-title">Analytics</div>
+        <ul>
+          <li>Shows WPM stats (min/max/mean/median/std, histogram).</li>
+          <li>Displays counts for words, duration, plays.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="callout">GET /api/bibles/{id}/download</div>
+        <div class="section-title">Download</div>
+        <ul>
+          <li>Downloads all recordings as bible.zip.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Implementation Note</h3>
+    <p>This page is a static illustration only. The live UI (login.html + app.html) uses plain HTML/CSS/vanilla JS and fetch calls to the APIs listed above; JWT is stored in <code>localStorage</code> and sent via Authorization headers.</p>
+  </div>
+</body>
+</html>

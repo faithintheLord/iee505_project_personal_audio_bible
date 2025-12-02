@@ -1,0 +1,39 @@
+Transcript of Codex session
+
+User: I want to run and test this app locally. How do I do that?
+Assistant: Walked through installing requirements and running uvicorn to open /static/login.html.
+
+User: uvicorn failed: ModuleNotFoundError: sqlmodel.
+Assistant: Activate venv, pip install -r requirements.txt, run uvicorn with venv python; check which python/uvicorn.
+
+User: Registering caused bcrypt __about__ error and 500.
+Assistant: Pin bcrypt<4, reinstall deps.
+
+User: ValidationError for Token user; login/register still failing.
+Assistant: Pydantic UserRead from_attributes fix; convert SQLModel to UserRead in token responses.
+
+User: Books/chapters dropdown empty; recordings upload 422.
+Assistant: Fix books/chapters serialization; confirmed seed had John 1-3.
+
+User: Asked not to update README for APIs; later logged in, books empty, stop button broken, unauthorized.
+Assistant: Added authFail redirect on 401, fixed recorder stop/timer, ensured dropdown fetch flow.
+
+User: WPM wrong; date formatting; wanted full Bible; scripture.csv added; auto-fill transcription; duration header change.
+Assistant: Loaded full canon from scripture.csv, added versions/verses endpoints, WPM fix, human-readable dates, version selector, verse auto-fill, duration column label, analytics section UI.
+
+User: Added request to summarize for git push and asked about WPM APIs and updates; explained WPM computed on list, not stored.
+
+User: Requested advanced analysis feature; asked to store word_count/wpm and add analytics endpoint.
+Assistant: Added DB columns with migration guard, compute on create/update, analytics endpoint with aggregates; README updated.
+
+User: Asked for analytics UI section; assistant added analytics section with summary/table and charts.
+
+User: Requested global metrics and plots; assistant added whole-Bible stats and histogram/box plot rendering.
+
+User: Asked to revert scales change after plots stopped; later asked to explain APIs and how they meet advanced analysis requirement; assistant described read/write endpoints and requirement fit.
+
+User: Requested to add Advanced Analytics section to README; assistant added UI summary to README; added static UI API map page; removed unused endpoints; added analytics explanation; updated UI summary.
+
+User: Requested updated transcript.
+
+Note: This transcript summarizes the conversation flow between the user and assistant during the session.***

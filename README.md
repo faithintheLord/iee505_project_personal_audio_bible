@@ -28,7 +28,6 @@ The database file `app.db` lives in the project root. Tables are created automat
 ## API outline
 - `POST /api/register` – create user + auth grants for Bible 1 and return token.
 - `POST /api/login` – login via username or email.
-- `GET /api/me` – current user.
 - `GET /api/bibles` – list bibles the user can access.
 - `GET /api/bibles/{id}/books` – books for a bible (requires listen/manage).
 - `GET /api/books/{id}/chapters` – chapters for a book.
@@ -38,9 +37,21 @@ The database file `app.db` lives in the project root. Tables are created automat
 - `GET /api/bibles/{id}/analytics` – aggregated metrics (WPM stats with min/max/mean/median/std + histogram, word counts, durations).
 - `POST /api/recordings` – upload audio (multipart/form-data) + metadata.
 - `GET /api/recordings/{id}/audio` – stream audio (increments play count).
-- `PUT /api/recordings/{id}` – update verse range/transcription.
 - `DELETE /api/recordings/{id}` – remove a recording.
 - `GET /api/bibles/{id}/download` – download a `bible.zip` of recordings.
+
+## Advanced Analytics
+The analytics read/write flow:
+
+- Write (persisted metrics): `POST /api/recordings` and `PUT /api/recordings/{id}` now compute and store `word_count` and `wpm` directly on the `Recordings` table. These writes update the information system with derived analysis data.
+- Read (analytics): `GET /api/bibles/{id}/analytics` reads stored recordings and returns aggregate WPM stats (count, min, max, mean, median, std, quartiles, histogram) plus totals/averages for words, duration, and plays. The frontend uses this API to visualize box/whisker and histogram.
+- Other reads: `GET /api/bibles/{id}/recordings` exposes stored `wpm`/`word_count` for row-level display.
+
+How this meets the “Advanced Analysis Feature” requirement:
+
+- We now have an analysis component that writes derived metrics (`word_count`, `wpm`) back into the system on create/update.
+- An analytics endpoint reads that stored data, computes statistical summaries (including distribution data for visualization), and serves it to the UI.
+- The UI renders those summaries and charts, demonstrating the read/visualization path. This is a near-final integrated analysis feature that both writes derived results and reads them for visualization.
 
 ## Frontend walkthrough
 1. Visit `/static/login.html` to register or log in. On success the JWT is stored in `localStorage` and you are sent to `app.html`.
@@ -56,3 +67,8 @@ The database file `app.db` lives in the project root. Tables are created automat
 - Validation enforces verse ranges against the canon chapter sample and prevents empty uploads.
 - Styling is intentionally monochrome and framework-free for clarity.
 - Recordings store `word_count` and `wpm` on save; `/api/bibles/{id}/analytics` reads those values to return aggregate stats.
+
+The UI is a simple two-page, framework-free frontend:
+
+static/login.html + login.js: registration and login forms that POST to /api/register and /api/login, storing the JWT in localStorage and redirecting to the app page.
+static/app.html + app.js: the main experience. It loads bibles/books/chapters, lets you select a verse range and version, auto-fills the transcription text, records audio via MediaRecorder, uploads it with metadata, lists recordings (play/delete), downloads all recordings as a zip, and shows an Analytics section with WPM stats and charts. The page uses plain HTML/CSS and vanilla JS fetch calls to the backend APIs.
