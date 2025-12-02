@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Personal Audio Bible</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="bar">
+    <h1>Personal Audio Bible</h1>
+    <div>
+      <label>Bible <select id="bible-select"></select></label>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section>
+      <h2>Record</h2>
+      <div class="flex">
+        <label>Book <select id="book-select"></select></label>
+        <label>Chapter <select id="chapter-select"></select></label>
+        <label>Verse Start <input id="verse-start" type="number" min="1" value="1"></label>
+        <label>Verse End <input id="verse-end" type="number" min="1" value="1"></label>
+      </div>
+      <div class="flex">
+        <button id="start-rec">Start Recording</button>
+        <button id="stop-rec" disabled>Stop</button>
+        <button id="upload-rec" disabled>Upload Recording</button>
+        <span id="timer">0s</span>
+      </div>
+      <textarea id="transcription" placeholder="Transcription (optional)"></textarea>
+      <div id="record-msg" class="message"></div>
+    </section>
+
+    <section>
+      <h2>Library</h2>
+      <table id="recordings-table">
+        <thead>
+          <tr><th>Book</th><th>Chapter</th><th>Verses</th><th>Date</th><th>Plays</th><th>Duration</th><th>WPM</th><th>Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <audio id="player" controls></audio>
+    </section>
+
+    <section>
+      <h2>Download</h2>
+      <button id="download-btn">Download bible.zip</button>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
